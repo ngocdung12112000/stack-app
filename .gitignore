@@ -1,0 +1,10 @@
+# The code repositories are separate git repos checked out inside this workspace
+/stackshop-frontend/
+/stackshop-backend/
+/stackshop-infra/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
