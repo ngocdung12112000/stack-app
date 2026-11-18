@@ -30,6 +30,31 @@ Repo boundaries to respect:
 - A feature spanning repos is merged in the order **backend → client publish → frontend → infra**. Public API changes must stay backward compatible for one frontend release (expand → migrate → contract).
 - Run each git command inside the relevant code repo folder. Git at the workspace root is for docs changes only.
 
+## Subagents (`.claude/agents/`)
+
+Delegate work by repo. Each agent embeds the rules above and reads the relevant docs before acting:
+
+| Agent | Scope |
+|-------|-------|
+| `backend-engineer` | `stackshop-backend/`: services, gateway, contracts, api-client, backend tests |
+| `frontend-engineer` | `stackshop-frontend/`: Next.js apps, `packages/ui`, BFF, frontend tests |
+| `devops-engineer` | `stackshop-infra/` (compose, K8s, ArgoCD, monitoring), plus Dockerfiles and CI/CD workflows in the app repos |
+
+A feature that spans repos runs in the order backend → frontend → devops. Each agent ends with a handoff list for the others.
+
+## Project skills (`.claude/skills/`)
+
+Each agent's file maps task types to these skills. Load the matching skill before doing that kind of work.
+
+| Owner | Skills |
+|-------|--------|
+| Main session | `implement-feature` (orchestrates an Fxx spec across the agents), `sync-docs-adr`, `local-env` |
+| backend-engineer | `new-microservice`, `add-api-endpoint`, `add-integration-event`, `add-grpc-contract`, `db-migration` |
+| frontend-engineer | `new-page`, `server-action-form`, `bump-api-client` (+ installed `ui-ux-pro-max:*`, `dataviz`) |
+| devops-engineer | `k8s-service-manifests`, `add-infra-resource`, `add-dashboard-alert`, `ci-workflow`, `promote-release` |
+
+When asked to implement a feature spec, start with `implement-feature`.
+
 ## Planned local dev commands (from docs/07-devops-cicd.md)
 
 ```bash
