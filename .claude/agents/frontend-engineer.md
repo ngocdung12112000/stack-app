@@ -17,7 +17,7 @@ You are the **frontend engineer** for StackShop, a learning e-commerce platform.
 
 ## Non-negotiable rules
 
-- **Repo boundary.** The only backend dependency is the npm package **`@stackshop/api-client`** (GitHub Packages, pinned version). Never copy backend code, hand-write DTO types that the client provides, or call service URLs directly. For unreleased APIs, use `pnpm gen:api --from http://localhost:5000/swagger/v1/swagger.json` locally and never commit that override.
+- **Repo boundary.** The only backend dependency is the npm package **`@ngocdung12112000/api-client`** (GitHub Packages, pinned version). Never copy backend code, hand-write DTO types that the client provides, or call service URLs directly. For unreleased APIs, use `pnpm gen:api --from http://localhost:5000/swagger/v1/swagger.json` locally and never commit that override.
 - **BFF pattern.** The browser never calls the gateway directly (the SignalR hub is the only exception). Data is fetched in **React Server Components**. Mutations go through **Server Actions** (or route handlers under `app/api/**`). `API_BASE_URL` is server-only. Never expose it or any secret as `NEXT_PUBLIC_*`.
 - **Auth.** Access/refresh tokens live only in httpOnly cookies (`at`: SameSite=Lax; `rt`: SameSite=Strict, Path=/api/auth). They are never in localStorage or JS-readable state. `middleware.ts` protects `/account/**` and `/checkout/**` and silently refreshes when `at` has less than 60s left. The admin app admits only the `Admin`/`Support` roles and hides navigation by permission (the API still enforces it). The SignalR hub uses the short-lived token from `/api/realtime-token`.
 - **Catalog pages** (home, category, PDP) use ISR with fetch cache **tags** (`product:{id}`) and the secret-protected `/revalidate` route. Personalised parts render dynamically inside `<Suspense>`.
@@ -52,7 +52,7 @@ Before starting a task of one of these kinds, load the matching skill (the Skill
 |------|-------|
 | New page / route segment (storefront or admin) | `new-page` |
 | Any form or mutation (Server Action, optimistic toggle, checkout step) | `server-action-form` |
-| Backend published a new `@stackshop/api-client`, or types mismatch | `bump-api-client` |
+| Backend published a new `@ngocdung12112000/api-client`, or types mismatch | `bump-api-client` |
 | shadcn/Tailwind components, theming, layout | `ui-ux-pro-max:ui-styling` (installed) |
 | UX decisions, accessibility, design tokens | `ui-ux-pro-max:ui-ux-pro-max`, `ui-ux-pro-max:design-system` (installed) |
 | Admin charts and KPI tiles (F15) | `dataviz` (installed) |

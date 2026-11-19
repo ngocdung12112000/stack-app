@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **StackShop** is a full-featured e-commerce app built as a learning project. Its purpose is to exercise every layer of a modern stack: Next.js + shadcn, .NET 8 microservices, MySQL, MongoDB, Redis, Kafka, RabbitMQ, SQS, Elasticsearch, Docker/K8s, GitHub Actions, and Prometheus/Grafana.
 
-**Right now this folder contains only design docs (`docs/`). No code repos exist yet.** The documents are the source of truth. Read the relevant spec before implementing anything, and update the spec if the implementation deviates from it.
+**Phase 0 is scaffolded locally** in `stackshop-infra/`, `stackshop-backend/` and `stackshop-frontend/` (each its own git repo, `git init` done, nothing committed or pushed yet). Each has its own `CLAUDE.md` with real commands, so prefer that file for command details. The documents in `docs/` are the source of truth. Read the relevant spec before implementing anything, and update the spec if the implementation deviates from it.
 
 - `docs/README.md`: index and reading order
 - `docs/10-roadmap.md`: phases 0–6. Implement in this order. Each phase lists its feature specs, which services it introduces, and a demo goal
@@ -24,7 +24,7 @@ This folder is the **design/docs repo** (`github.com/ngocdung12112000/stack-app`
 | `stackshop-infra/` | `local/compose.yml` + `local/init/` (all third-party infra for local dev), `k8s/apps/<svc>/{base,overlays}`, `k8s/platform`, `k8s/data`, `monitoring/` (Grafana dashboards, PrometheusRules), `argocd/` |
 
 Repo boundaries to respect:
-- The repos never import each other's source. The **frontend depends on the backend only via the npm package `@stackshop/api-client`** (published from the backend to GitHub Packages) and the gateway URL (`API_BASE_URL`, server-side only).
+- The repos never import each other's source. The **frontend depends on the backend only via the npm package `@ngocdung12112000/api-client`** (published from the backend to GitHub Packages) and the gateway URL (`API_BASE_URL`, server-side only).
 - App repos contain **no K8s manifests** and never deploy. They build images to GHCR and open tag-bump PRs in `stackshop-infra`, and ArgoCD syncs the clusters.
 - Dashboards, alerts, scrape config, env vars, secrets and new services all need an infra-repo change.
 - A feature spanning repos is merged in the order **backend → client publish → frontend → infra**. Public API changes must stay backward compatible for one frontend release (expand → migrate → contract).

@@ -23,4 +23,4 @@ Option 3. The backend repo holds **all** microservices, and each service is stil
 
 - Positive: independent FE/BE releases. Teaches GitOps (image-tag PRs, ArgoCD), versioned API clients and backward-compatible API evolution. Infra changes (alerts, scaling) don't need an app release.
 - Negative: API changes need two steps (backend publishes the client, the frontend upgrades it). Local dev needs three checkouts and a shared Docker network. E2E tests must target a deployed environment or a full local stack.
-- Follow-up: create a GitHub App (or fine-grained PAT) that lets FE/BE workflows open PRs in `stackshop-infra`. Set up GitHub Packages for `@stackshop/api-client`. Set up Renovate in the frontend repo.
+- Follow-up: create a GitHub App (or fine-grained PAT) that lets FE/BE workflows open PRs in `stackshop-infra`. Set up GitHub Packages for `@ngocdung12112000/api-client`. Set up Renovate in the frontend repo.

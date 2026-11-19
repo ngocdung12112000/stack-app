@@ -1,9 +1,9 @@
 ---
 name: bump-api-client
-description: Upgrade the @stackshop/api-client npm package in stackshop-frontend to a new version published by the backend, fix resulting type errors, update MSW mocks, and verify. Also covers generating a temporary local client from a running gateway for unreleased APIs. Use after a backend handoff mentions a new client version, when Renovate opens a bump PR, or when frontend types don't match the API.
+description: Upgrade the @ngocdung12112000/api-client npm package in stackshop-frontend to a new version published by the backend, fix resulting type errors, update MSW mocks, and verify. Also covers generating a temporary local client from a running gateway for unreleased APIs. Use after a backend handoff mentions a new client version, when Renovate opens a bump PR, or when frontend types don't match the API.
 ---
 
-# Bump `@stackshop/api-client`
+# Bump `@ngocdung12112000/api-client`
 
 The frontend's **only** link to backend types is this package (GitHub Packages, pinned version). Never hand-write DTOs that the client already provides, and never copy backend code.
 
@@ -11,8 +11,8 @@ The frontend's **only** link to backend types is this package (GitHub Packages, 
 
 ```bash
 cd stackshop-frontend
-pnpm view @stackshop/api-client versions --json | tail -5    # check what's published (needs .npmrc auth to npm.pkg.github.com)
-pnpm up -r @stackshop/api-client@<version>                   # every app/package that uses it
+pnpm view @ngocdung12112000/api-client versions --json | tail -5    # check what's published (needs .npmrc auth to npm.pkg.github.com)
+pnpm up -r @ngocdung12112000/api-client@<version>                   # every app/package that uses it
 ```
 
 Read the backend handoff or changelog for the version. A **major** bump means breaking changes, so expect type errors.
@@ -53,4 +53,4 @@ Use it only to develop against a backend branch. **Don't commit the override.** 
 
 ## Commit
 
-Commit (only if the user asked) with `chore(web): bump @stackshop/api-client to <version>`, or `feat(...)` if UI changes are included, and reference the spec ID.
+Commit (only if the user asked) with `chore(web): bump @ngocdung12112000/api-client to <version>`, or `feat(...)` if UI changes are included, and reference the spec ID.

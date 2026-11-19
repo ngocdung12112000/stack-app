@@ -11,7 +11,7 @@ Both apps live in the **`stackshop-frontend` repository** (pnpm + Turborepo work
 
 Talking to the backend:
 
-- The only backend dependency is the npm package **`@stackshop/api-client`** (typed client + DTO types). The backend repo generates it from OpenAPI and publishes it to GitHub Packages. Pin the version in `package.json` and let Renovate open bump PRs.
+- The only backend dependency is the npm package **`@ngocdung12112000/api-client`** (typed client + DTO types). The backend repo generates it from OpenAPI and publishes it to GitHub Packages. Pin the version in `package.json` and let Renovate open bump PRs.
 - The only runtime dependency is the gateway URL (`API_BASE_URL`, server-side only, never exposed as `NEXT_PUBLIC_*`). Browsers never call the gateway directly, except for the SignalR hub (`NEXT_PUBLIC_REALTIME_URL`).
 - For unreleased APIs during local development: `pnpm gen:api --from http://localhost:5000/swagger/v1/swagger.json` generates a local client that overrides the package.
 - UI work without a backend: MSW (Mock Service Worker) handlers in `apps/*/mocks` built from the client's types. CI Playwright smoke tests use them too.

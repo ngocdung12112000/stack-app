@@ -40,11 +40,11 @@ gantt
 - [ ] Architecture test: services must not reference each other.
 - [ ] `gateway` (YARP) routing to catalog. `docker-compose.yml` joining the infra network.
 - [ ] `ci.yml` (changed-service matrix, build + test).
-- [ ] OpenAPI generation + `publish-client.yml` → first `@stackshop/api-client@0.1.0` on GitHub Packages.
+- [ ] OpenAPI generation + `publish-client.yml` → first `@ngocdung12112000/api-client@0.1.0` on GitHub Packages.
 
 **`stackshop-frontend`**
 - [ ] `git init` + GitHub repo. pnpm + Turborepo workspace, `apps/web` with shadcn initialised (layout, header, footer, theme toggle), `packages/ui`, `packages/config`.
-- [ ] `.npmrc` for GitHub Packages, install `@stackshop/api-client`. MSW mocks.
+- [ ] `.npmrc` for GitHub Packages, install `@ngocdung12112000/api-client`. MSW mocks.
 - [ ] `ci.yml` (lint, typecheck, test, build).
 
 **Demo:** three repos with green CI. Infra compose up → backend compose up → `http://localhost:5000/api/v1/products` returns an empty list → `pnpm dev` shows the storefront calling the gateway through the published client. `/metrics` is visible in Prometheus.
@@ -144,7 +144,7 @@ gantt
 
 - [ ] Spec acceptance criteria all pass
 - [ ] Unit + integration tests written and green in CI
-- [ ] OpenAPI annotations complete, new `@stackshop/api-client` version published, frontend bumped to it
+- [ ] OpenAPI annotations complete, new `@ngocdung12112000/api-client` version published, frontend bumped to it
 - [ ] Public API changes are backward compatible (or versioned)
 - [ ] Events documented in `stackshop-backend/contracts/` and [04-messaging-and-events.md](./04-messaging-and-events.md)
 - [ ] Infra PR for any new service, env var, secret, alert or dashboard panel

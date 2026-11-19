@@ -314,13 +314,13 @@ Frontend, backend and infrastructure are **three independent git repositories**.
 
 | Repository | Owns | Publishes | Consumes |
 |------------|------|-----------|----------|
-| `stackshop-frontend` | Next.js storefront + admin, shared UI, E2E tests | Container images `stackshop-web`, `stackshop-admin` (GHCR) | `@stackshop/api-client` npm package, the gateway URL |
-| `stackshop-backend` | All .NET microservices, gateway, building blocks, event/proto contracts, seeder, load tests | One container image per service (GHCR), `@stackshop/api-client` npm package (GitHub Packages), OpenAPI documents | – |
+| `stackshop-frontend` | Next.js storefront + admin, shared UI, E2E tests | Container images `stackshop-web`, `stackshop-admin` (GHCR) | `@ngocdung12112000/api-client` npm package, the gateway URL |
+| `stackshop-backend` | All .NET microservices, gateway, building blocks, event/proto contracts, seeder, load tests | One container image per service (GHCR), `@ngocdung12112000/api-client` npm package (GitHub Packages), OpenAPI documents | – |
 | `stackshop-infra` | K8s manifests, Helm values for data stores, monitoring config, ArgoCD apps, local Compose for third-party infra | – (it *is* the desired state of every cluster) | Image tags from the other two repos (via automated PRs) |
 
 ```mermaid
 flowchart LR
-    BE[stackshop-backend] -->|npm: @stackshop/api-client| FE[stackshop-frontend]
+    BE[stackshop-backend] -->|npm: @ngocdung12112000/api-client| FE[stackshop-frontend]
     BE -->|images + tag-bump PR| INF[stackshop-infra]
     FE -->|images + tag-bump PR| INF
     INF -->|ArgoCD sync| K8S[(Kubernetes)]
@@ -380,7 +380,7 @@ stackshop-backend/
 │   ├── events/                # integration event JSON Schemas
 │   ├── protos/                # gRPC .proto files
 │   └── openapi/               # generated OpenAPI docs (CI artifact, committed snapshot)
-├── clients/api-client/        # TS client generator project → published as @stackshop/api-client
+├── clients/api-client/        # TS client generator project → published as @ngocdung12112000/api-client
 ├── tools/Seeder/
 ├── tests/load/                # k6
 ├── docker-compose.yml         # runs the .NET services; joins the infra network from stackshop-infra/local
@@ -421,7 +421,7 @@ stackshop-infra/
 
 ### 9.4 Cross-repo contract flow
 
-1. A backend change alters an API. CI regenerates the OpenAPI docs, and `publish-client.yml` publishes a new `@stackshop/api-client` version (semver: breaking API change → major).
+1. A backend change alters an API. CI regenerates the OpenAPI docs, and `publish-client.yml` publishes a new `@ngocdung12112000/api-client` version (semver: breaking API change → major).
 2. Renovate/Dependabot opens a PR in `stackshop-frontend` to bump the client. Type errors show exactly what the frontend has to change.
 3. Backend APIs stay **backward compatible for at least one frontend release**: add new fields/endpoints first, and remove old ones only after the frontend has moved (expand → migrate → contract).
 4. For local development against an unreleased API, the frontend can generate the client straight from the running gateway (`pnpm gen:api --from http://localhost:5000/swagger/v1/swagger.json`).

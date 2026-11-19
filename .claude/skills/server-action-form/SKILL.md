@@ -1,6 +1,6 @@
 ---
 name: server-action-form
-description: Build a form or mutation in the StackShop Next.js apps using react-hook-form + zod on the client, a Server Action (or route handler) that re-validates with the same zod schema and calls @stackshop/api-client, ProblemDetails-to-field error mapping, revalidateTag/revalidatePath, and optimistic UI. Use for login/register, address forms, add-to-cart, checkout steps, reviews, admin create/edit forms and any button that mutates data.
+description: Build a form or mutation in the StackShop Next.js apps using react-hook-form + zod on the client, a Server Action (or route handler) that re-validates with the same zod schema and calls @ngocdung12112000/api-client, ProblemDetails-to-field error mapping, revalidateTag/revalidatePath, and optimistic UI. Use for login/register, address forms, add-to-cart, checkout steps, reviews, admin create/edit forms and any button that mutates data.
 ---
 
 # Form + Server Action

@@ -15,7 +15,7 @@
 | Errors | RFC 7807 `application/problem+json` (see §3) |
 | Idempotency | `Idempotency-Key` header required on `POST /orders` and `POST /payments/*` |
 | Concurrency | `ETag` / `If-Match` on admin PUT for products, stock and orders → `412 Precondition Failed` on mismatch |
-| Docs | Each service exposes OpenAPI (`/swagger`). The gateway aggregates them. The backend repo generates the TS client and publishes it as the npm package `@stackshop/api-client`, which the frontend repo consumes (see [02-architecture.md §9.4](./02-architecture.md)) |
+| Docs | Each service exposes OpenAPI (`/swagger`). The gateway aggregates them. The backend repo generates the TS client and publishes it as the npm package `@ngocdung12112000/api-client`, which the frontend repo consumes (see [02-architecture.md §9.4](./02-architecture.md)) |
 | Compatibility | Frontend and backend are released independently, so a public API change must be **backward compatible for at least one frontend release** (expand → migrate → contract). A breaking change requires a new API version (`/api/v2`) or a coordinated deprecation |
 
 ## 2. Gateway routes

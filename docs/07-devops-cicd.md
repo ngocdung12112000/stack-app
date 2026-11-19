@@ -71,7 +71,7 @@ ENTRYPOINT ["dotnet", "Ordering.Api.dll"]
 
 ### Next.js (in `stackshop-frontend/apps/<app>/Dockerfile`)
 
-`output: 'standalone'`. Build stage on `node:20-alpine` with pnpm + turbo prune. The runtime copies `.next/standalone`, `.next/static` and `public`, runs as a non-root user, and exposes 3000.
+`output: 'standalone'`. Build stage on `node:22-alpine` (pnpm 11 requires Node ≥ 22.13) with pnpm + turbo prune. The runtime copies `.next/standalone`, `.next/static` and `public`, runs as a non-root user, and exposes 3000.
 
 Image rules: non-root user, pinned base digests (Renovate/Dependabot updates them), `.dockerignore`, OCI labels (`org.opencontainers.image.revision`), Trivy scan in CI with failure on CRITICAL.
 
@@ -143,7 +143,7 @@ Each repository has its own workflows. **App repos never talk to the cluster.** 
 | `security.yml` | PR + nightly | CodeQL (C#), Gitleaks, dependency review, Trivy filesystem scan |
 | `build-images.yml` | push to `main` | Matrix of changed services → Buildx (`type=gha` cache) → push `ghcr.io/<owner>/stackshop-<svc>:<sha>` → Trivy image scan → SBOM (Syft) → (stretch goal) cosign sign → **open a PR in `stackshop-infra`** updating `k8s/apps/<svc>/overlays/dev` to the new tag (auto-merge when infra CI passes) |
 | `release.yml` | merge of a release PR | `release-please` in monorepo mode: **one version per service** (`ordering-v1.4.0`) → retag the image `:1.4.0` → open a staging promotion PR in infra |
-| `publish-client.yml` | release of `gateway` or any API change on `main` | Generate the TS client from the aggregated OpenAPI → publish `@stackshop/api-client` to GitHub Packages |
+| `publish-client.yml` | release of `gateway` or any API change on `main` | Generate the TS client from the aggregated OpenAPI → publish `@ngocdung12112000/api-client` to GitHub Packages |
 
 **`stackshop-frontend/.github/workflows/`**
 

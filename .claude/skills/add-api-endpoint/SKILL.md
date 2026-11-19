@@ -1,6 +1,6 @@
 ---
 name: add-api-endpoint
-description: Add or change a REST endpoint in a StackShop .NET service the standard way. Covers the Minimal API route, MediatR command/query, FluentValidation, ProblemDetails error codes, permission and ownership checks, idempotency/ETag where required, OpenAPI annotations, gateway route, tests named after spec IDs, and publishing a new @stackshop/api-client. Use whenever a feature spec's API table needs implementing or an endpoint changes.
+description: Add or change a REST endpoint in a StackShop .NET service the standard way. Covers the Minimal API route, MediatR command/query, FluentValidation, ProblemDetails error codes, permission and ownership checks, idempotency/ETag where required, OpenAPI annotations, gateway route, tests named after spec IDs, and publishing a new @ngocdung12112000/api-client. Use whenever a feature spec's API table needs implementing or an endpoint changes.
 ---
 
 # Add / change an API endpoint
@@ -40,7 +40,7 @@ Source of truth: the feature spec's **API** table + `docs/05-api-design.md` (con
 ## 4. Contract and client
 
 1. Regenerate OpenAPI → `contracts/openapi/<service>.json` (CI diffs it with `oasdiff`). Breaking → the PR needs the `breaking-api` label and a justification.
-2. Bump the `@stackshop/api-client` version (minor for additions, major for breaking) so `publish-client.yml` publishes it.
+2. Bump the `@ngocdung12112000/api-client` version (minor for additions, major for breaking) so `publish-client.yml` publishes it.
 
 ## 5. Handoff
 

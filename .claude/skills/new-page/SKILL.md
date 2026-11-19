@@ -1,6 +1,6 @@
 ---
 name: new-page
-description: Add a Next.js App Router page or route segment to the StackShop storefront (apps/web) or admin (apps/admin). Covers server-side data fetching through @stackshop/api-client, ISR/cache tags or dynamic rendering, loading/empty/error states, metadata/SEO, next-intl messages, middleware protection and tests. Use when a feature spec's Frontend section or the route maps in docs/06-frontend.md need a page.
+description: Add a Next.js App Router page or route segment to the StackShop storefront (apps/web) or admin (apps/admin). Covers server-side data fetching through @ngocdung12112000/api-client, ISR/cache tags or dynamic rendering, loading/empty/error states, metadata/SEO, next-intl messages, middleware protection and tests. Use when a feature spec's Frontend section or the route maps in docs/06-frontend.md need a page.
 ---
 
 # New page / route
@@ -46,7 +46,7 @@ app/(group)/<segment>/
 ## 5. Tests
 
 - Vitest + Testing Library for interactive client components on the page.
-- MSW handler for the API calls used (typed from `@stackshop/api-client`).
+- MSW handler for the API calls used (typed from `@ngocdung12112000/api-client`).
 - Playwright test in `tests/e2e` for the spec's journey on this page, named after the spec ID (`F04_AC3 brand facet keeps other counts`).
 - Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build --filter <app>`.
 
