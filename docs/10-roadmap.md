@@ -30,24 +30,26 @@ gantt
 **Goal:** three repositories that each build on their own, with infra running locally.
 
 **`stackshop-infra`**
-- [ ] `git init` + GitHub repo. `local/compose.yml` with MySQL, MongoDB, Redis, Mailpit, Prometheus and Grafana first, on the `stackshop` network. Kafka, RabbitMQ, ES and LocalStack are added in their own phase.
-- [ ] `local/init/mysql` schema + user scripts. `validate.yml` (empty k8s folder is fine for now).
+- [x] `git init` + GitHub repo. `local/compose.yml` with MySQL, MongoDB, Redis, Mailpit, Prometheus and Grafana first, on the `stackshop` network. Kafka, RabbitMQ, ES and LocalStack are added in their own phase.
+- [x] `local/init/mysql` schema + user scripts. `validate.yml` (empty k8s folder is fine for now).
 
 **`stackshop-backend`**
-- [ ] `git init` + GitHub repo. Folder structure ([02-architecture.md §9.2](./02-architecture.md)), `Directory.Build.props`, `Directory.Packages.props` (central package management), `.editorconfig`.
-- [ ] `building-blocks`: Common (Result, errors), Observability (OTel + /metrics + Serilog), Security (JWT validation), Messaging (interfaces only).
-- [ ] Service template: a `catalog` skeleton with 4 layers, health checks, Swagger, a Dockerfile and test projects, saved as a `dotnet new` template (`dotnet new stackshop-service -n Ordering`) so every later service starts identical.
-- [ ] Architecture test: services must not reference each other.
-- [ ] `gateway` (YARP) routing to catalog. `docker-compose.yml` joining the infra network.
-- [ ] `ci.yml` (changed-service matrix, build + test).
-- [ ] OpenAPI generation + `publish-client.yml` → first `@ngocdung12112000/api-client@0.1.0` on GitHub Packages.
+- [x] `git init` + GitHub repo. Folder structure ([02-architecture.md §9.2](./02-architecture.md)), `Directory.Build.props`, `Directory.Packages.props` (central package management), `.editorconfig`.
+- [x] `building-blocks`: Common (Result, errors), Observability (OTel + /metrics + Serilog), Security (JWT validation), Messaging (interfaces only).
+- [x] Service template: a `catalog` skeleton with 4 layers, health checks, Swagger, a Dockerfile and test projects, saved as a `dotnet new` template (`dotnet new stackshop-service -n Ordering`) so every later service starts identical.
+- [x] Architecture test: services must not reference each other.
+- [x] `gateway` (YARP) routing to catalog. `docker-compose.yml` joining the infra network.
+- [x] `ci.yml` (changed-service matrix, build + test).
+- [x] OpenAPI generation + `publish-client.yml` → first `@ngocdung12112000/api-client@0.1.0` on GitHub Packages.
 
 **`stackshop-frontend`**
-- [ ] `git init` + GitHub repo. pnpm + Turborepo workspace, `apps/web` with shadcn initialised (layout, header, footer, theme toggle), `packages/ui`, `packages/config`.
-- [ ] `.npmrc` for GitHub Packages, install `@ngocdung12112000/api-client`. MSW mocks.
-- [ ] `ci.yml` (lint, typecheck, test, build).
+- [x] `git init` + GitHub repo. pnpm + Turborepo workspace, `apps/web` with shadcn initialised (layout, header, footer, theme toggle), `packages/ui`, `packages/config`.
+- [x] `.npmrc` for GitHub Packages, install `@ngocdung12112000/api-client`. MSW mocks.
+- [x] `ci.yml` (lint, typecheck, test, build).
 
 **Demo:** three repos with green CI. Infra compose up → backend compose up → `http://localhost:5000/api/v1/products` returns an empty list → `pnpm dev` shows the storefront calling the gateway through the published client. `/metrics` is visible in Prometheus.
+
+**Status: done (2026-11-24).** Demo verified locally and CI is green in all three repos. Notes: the client is published as `@ngocdung12112000/api-client@0.1.1` (0.1.1 aligns it with the page-based catalog API); catalog uses an in-memory placeholder repository until its MongoDB store lands in Phase 1.
 
 ## Phase 1 — Identity, Catalog, Storefront basics (≈4 weeks)
 

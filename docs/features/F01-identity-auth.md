@@ -58,7 +58,28 @@ See [03-data-architecture.md §2.1](../03-data-architecture.md): `users`, `roles
 | PUT | `/api/v1/admin/users/{id}/roles` | `users:write` | `{roles:[...]}` |
 | POST | `/api/v1/admin/users/{id}/lock` / `unlock` | `users:write` | |
 
-Error codes: `IDENTITY_EMAIL_TAKEN` (409), `IDENTITY_INVALID_CREDENTIALS` (401), `IDENTITY_LOCKED_OUT` (423 or 401 with code), `IDENTITY_TOKEN_INVALID` (400), `IDENTITY_REFRESH_REUSED` (401), `IDENTITY_WEAK_PASSWORD` (400).
+Error codes (all RFC 7807 `ProblemDetails` with a `code` field):
+
+| Code | HTTP | When |
+|------|------|------|
+| `IDENTITY_EMAIL_TAKEN` | 409 | Register with an existing email (any case) |
+| `IDENTITY_INVALID_CREDENTIALS` | 401 | Wrong email or password (identical for unknown emails, BR-07) |
+| `IDENTITY_LOCKED_OUT` | 423 | 5 failed logins (15 min) or admin lock. Unknown emails lock the same way |
+| `IDENTITY_TOO_MANY_ATTEMPTS` | 429 | Per-IP throttle (20 failures / 15 min), `Retry-After` set |
+| `IDENTITY_TOKEN_INVALID` | 400 | Bad, used or expired confirm/reset token |
+| `IDENTITY_REFRESH_REUSED` | 401 | A rotated refresh token was presented again; the whole family is revoked (BR-06) |
+| `IDENTITY_REFRESH_INVALID` | 401 | Unknown, revoked, expired refresh token, or locked/deleted user (BR-09) |
+| `IDENTITY_WEAK_PASSWORD` | 400 | Password policy (BR-02); `errors.password` has the message |
+| `IDENTITY_INVALID_CURRENT_PASSWORD` | 400 | change-password with a wrong current password (400, not 401, so the client does not drop the session) |
+| `IDENTITY_UNKNOWN_ROLE` | 400 | Admin assigns a role that does not exist |
+| `IDENTITY_CANNOT_LOCK_SELF` | 409 | Admin locks their own account |
+| `IDENTITY_USER_NOT_FOUND`, `IDENTITY_SESSION_NOT_FOUND` | 404 | |
+| `IDENTITY_VALIDATION_FAILED` | 400 | Other FluentValidation failures (`errors` dictionary) |
+| `IDENTITY_CONCURRENT_UPDATE` | 409 | Optimistic concurrency conflict; retry |
+
+Response shapes: `login` returns `{accessToken, refreshToken, expiresIn (seconds), user{id,email,fullName,roles}}`; `refresh` returns `{accessToken, refreshToken, expiresIn}`; `users/me` returns `{id,email,fullName,phone,emailConfirmed,status,roles[],permissions[],createdAt}`; sessions are `{familyId,userAgent,ip,startedAt,lastUsedAt,expiresAt}`; the admin list is a `PagedResult` of the `users/me` shape. `logout` body is optional (`{refreshToken?, allDevices?}`); with no body only the access token is blacklisted. Access-token claims: `sub, jti, email, email_verified, name, role[], perm[], iss=stackshop-identity, aud=stackshop-api`.
+
+Implementation notes (as built): passwords use ASP.NET `PasswordHasher<User>` (PBKDF2); `refresh_tokens` also keep `created_at`, `last_used_at`, `family_started_at` (30-day cap); the first admin is created with `IDENTITY_ADMIN_PASSWORD=... dotnet Identity.Api.dll create-admin --email=... --name=...` (BR-08); `dotnet Identity.Api.dll migrate` applies EF migrations (the K8s Job). `change-password` does not revoke other sessions (spec is silent; candidate follow-up).
 
 ## 5. Events
 
@@ -67,6 +88,8 @@ Error codes: `IDENTITY_EMAIL_TAKEN` (409), `IDENTITY_INVALID_CREDENTIALS` (401),
 | `identity.user-registered.v1` | After registration → notification sends the welcome + confirm email. Analytics counts signups |
 | `identity.password-reset-requested.v1` | Forgot password → notification sends the reset email (token in payload, never logged) |
 | `identity.user-locked.v1` | Admin locks a user |
+
+Delivery (Phase 1): Kafka does not exist yet, so the three events are only written to the `outbox_messages` table (no relay). Confirmation and reset emails are sent by identity itself through an `IEmailSender` (MailKit SMTP, in-memory queue + background dispatcher, Mailpit locally). When the notification service and the outbox relay arrive (Phase 4/2), move sending there and drop the direct sender. Note `identity.user-registered.v1` does not carry the confirmation token, so notification will need it added (additive change) or a resend flow. JSON Schemas: `contracts/events/identity.*.v1.schema.json`.
 
 ## 6. Frontend
 

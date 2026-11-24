@@ -28,6 +28,7 @@ users (
   status ENUM('Active','Locked','Deleted') DEFAULT 'Active',
   failed_login_count INT DEFAULT 0,
   lockout_end DATETIME(6) NULL,
+  row_version INT NOT NULL,      -- optimistic concurrency token
   created_at, updated_at
 )
 roles (id, name UNIQUE)                          -- Customer, Admin, Support
@@ -37,7 +38,7 @@ refresh_tokens (
   id PK, user_id FK, token_hash CHAR(64) UNIQUE, family_id CHAR(36),
   expires_at, revoked_at NULL, replaced_by_id NULL, created_ip VARCHAR(45), user_agent VARCHAR(300)
 )
-email_tokens (id, user_id, purpose ENUM('Confirm','Reset'), token_hash, expires_at, used_at)
+email_tokens (id, user_id, purpose ENUM('Confirm','Reset'), token_hash CHAR(64), created_at, expires_at, used_at)
 addresses (
   id PK, user_id FK INDEX, recipient_name, phone, line1, line2, ward, district, city,
   country_code CHAR(2), postal_code, is_default BOOLEAN, created_at, updated_at
@@ -233,7 +234,8 @@ Indexes: `{productId:1, status:1, createdAt:-1}`, `{userId:1, productId:1}` uniq
 | `lock:{resource}` | String (SET NX PX) | 5–30s | inventory, jobs | Distributed lock (Redlock-lite) |
 | `promo:coupon:{code}:used` | String counter | until coupon expiry | promotion | Fast atomic usage check (Lua) |
 | `auth:revoked-jti:{jti}` | String | = token remaining life | identity, gateway | Access-token blacklist on logout |
-| `auth:login-attempts:{ip}` | String counter | 15m | identity | Brute-force protection |
+| `auth:login-attempts:{ip}` | String counter | 15m | identity | Brute-force protection (failed logins per IP) |
+| `auth:login-unknown:{sha256(email)[:32]}` | String counter | 15m | identity | Lockout for emails with no account, so lockout never reveals existence |
 | `reco:trending:{yyyyMMddHH}` | Sorted set | 48h | analytics | Trending products by views |
 | `reco:recent:{userId}` | List (cap 20) | 30d | analytics | Recently viewed |
 | `signalr:*` | pub/sub | – | notification | SignalR backplane |
