@@ -5,7 +5,7 @@
 | Phase | 1 |
 | Service | `identity` |
 | Stack | .NET 8, ASP.NET Core Identity (user store only), EF Core + MySQL, Redis, JWT RS256 |
-| Frontend | `apps/web` (auth pages), `apps/admin` (login), `middleware.ts` |
+| Frontend | `apps/web` (auth pages), `apps/admin` (login), `proxy.ts` |
 | Depends on | Gateway (F17 basic routing) |
 
 ## 1. User stories
@@ -95,9 +95,10 @@ Delivery (Phase 1): Kafka does not exist yet, so the three events are only writt
 
 - Pages: `/login`, `/register`, `/forgot-password`, `/reset-password?token=&email=`, `/verify-email?userId=&token=`, `/account/security`.
 - Forms use shadcn `Form` + zod. Server Actions call the API and set cookies (`at`, `rt`) with `cookies().set(...)`.
-- `middleware.ts`:
+- `proxy.ts` (the Next.js 16 name for `middleware.ts`, see ADR-003):
   - Protects `/account/**` and `/checkout/**` → redirects to `/login?returnUrl=`.
-  - If `at` expires in under 60 seconds and `rt` exists → calls refresh and rewrites both cookies on the response.
+  - If `at` is missing-but-session-exists, expired or has under 60 seconds left → redirects to `/api/auth/refresh?returnUrl=`. That route handler reads `rt` (it is scoped to `Path=/api/auth`, so the proxy cannot), rotates both cookies, then redirects back. Prefetch requests are skipped, and a single-flight lock per `rt` prevents false reuse detection (BR-06).
+  - Logout is a route handler (`POST /api/auth/logout`) for the same cookie-path reason.
 - Header shows the user menu (Avatar + DropdownMenu) or Login/Register buttons.
 - Admin app: only users with the `Admin` or `Support` role can log in (checked after login, otherwise "Not authorised").
 
@@ -114,7 +115,7 @@ Delivery (Phase 1): Kafka does not exist yet, so the three events are only writt
 - AC-3: **Given** 5 wrong passwords, **when** I try the correct one, **then** I get a locked-out error until 15 minutes pass.
 - AC-4: **Given** a refresh token R1 rotated to R2, **when** R1 is used again, **then** 401 and R2 is revoked too.
 - AC-5: **Given** I'm logged in, **when** I log out, **then** calling an API with the old access token returns 401 (blacklisted `jti`).
-- AC-6: **Given** the access token expired, **when** I navigate to `/account`, **then** the middleware silently refreshes and the page renders.
+- AC-6: **Given** the access token expired, **when** I navigate to `/account`, **then** the proxy and `/api/auth/refresh` silently refresh and the page renders.
 - AC-7: Forgot-password returns the same response for existing and non-existing emails.
 - AC-8: Non-staff users cannot access the admin app.
 

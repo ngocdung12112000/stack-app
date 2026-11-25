@@ -94,7 +94,7 @@ sequenceDiagram
     N-->>B: Set-Cookie: at=…; HttpOnly; Secure; SameSite=Lax<br/>Set-Cookie: rt=…; HttpOnly; Secure; SameSite=Strict; Path=/api/auth
     B->>N: GET /account/orders (RSC)
     N->>G: GET /api/v1/orders (Authorization: Bearer at)
-    Note over N: middleware.ts: if `at` expires within 60s,<br/>call /auth/refresh with `rt`, rotate both cookies
+    Note over N: proxy.ts: if `at` expires within 60s, redirect to<br/>/api/auth/refresh, which calls /auth/refresh with `rt`<br/>and rotates both cookies (ADR-003)
 ```
 
 - JWT signed with **RS256**. The public keys are published at `/.well-known/jwks.json` (identity). Keys rotate every 90 days, with both keys kept during the overlap.

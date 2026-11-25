@@ -28,7 +28,7 @@ Talking to the backend:
 | Client state | Zustand (cart drawer open, UI preferences). Keep it minimal |
 | Tables | TanStack Table + shadcn `DataTable` |
 | Charts | shadcn Charts (Recharts) |
-| Auth | Custom BFF: httpOnly cookies, `middleware.ts` refresh (see [05-api-design.md §4](./05-api-design.md)) |
+| Auth | Custom BFF: httpOnly cookies, `proxy.ts` + `/api/auth/refresh` (see [05-api-design.md §4](./05-api-design.md)) |
 | Real-time | `@microsoft/signalr` client for notifications and order status |
 | i18n | `next-intl` (en, vi) |
 | Images | `next/image` with a remote pattern for the MinIO/S3 public bucket |
@@ -70,7 +70,7 @@ app/
 ├── revalidate/route.ts                 # Webhook from catalog to revalidate tags (secret-protected)
 ├── layout.tsx, not-found.tsx, error.tsx, loading.tsx
 └── sitemap.ts, robots.ts
-middleware.ts                           # auth refresh, protect /account & /checkout, guest cart cookie
+proxy.ts                                # protect /account & /checkout, redirect to /api/auth/refresh, guest cart cookie
 ```
 
 ## 4. Admin route map (`apps/admin/app`)

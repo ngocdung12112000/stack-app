@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StackShop Login Flow: File Map</title>
+<style>
+/* Layout: swimlane per architecture layer (left), step detail panel (right). Steps follow the real call order. */
+:root {
+  --bg: #f3f5f7; --panel: #ffffff; --ink: #17202a; --muted: #5a6876; --line: #d5dce3;
+  --accent: #0b6e8a; --accent-soft: #e1f0f4;
+  --l-gw: #5a6876; --l-api: #3d4a9e; --l-app: #0b6e8a; --l-dom: #2f7a3a; --l-inf: #b4530f; --l-data: #7a3e93;
+  --ok: #2f7a3a; --bad: #b3262e;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#0f1419; --panel:#161d24; --ink:#e3e9ee; --muted:#93a2b0; --line:#2a343e; --accent:#4fb8d6; --accent-soft:#15303a;
+    --l-gw:#93a2b0; --l-api:#9aa6ee; --l-app:#4fb8d6; --l-dom:#77c785; --l-inf:#f0a066; --l-data:#cf99e4; --ok:#77c785; --bad:#f07a80; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--sans); }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: clamp(24px, 3.5vw, 36px); margin: 0 0 4px; letter-spacing: -0.01em; }
+.sub { color: var(--muted); margin: 0 0 18px; max-width: 70ch; }
+code { font-family: var(--mono); font-size: 12.5px; background: var(--accent-soft); padding: 1px 5px; border-radius: 3px; }
+
+.main { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .main { grid-template-columns: 1fr; } .detail { position: static !important; } }
+
+.lanes { display: grid; gap: 8px; }
+.lane { display: grid; grid-template-columns: 112px 1fr; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.lane > .name { padding: 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #fff; display: flex; align-items: center; }
+.lane .cards { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; min-width: 0; }
+@media (max-width: 520px) { .lane { grid-template-columns: 1fr; } .lane > .name { padding: 6px 10px; } }
+
+.card { position: relative; text-align: left; font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 5px;
+  padding: 8px 10px 8px 38px; cursor: pointer; min-width: 0; flex: 1 1 200px; max-width: 100%; }
+.card:hover { border-color: var(--accent); }
+.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.card .n { position: absolute; left: 8px; top: 8px; width: 22px; height: 22px; border-radius: 50%; color: #fff; font: 700 12px/22px var(--mono); text-align: center; }
+.card b { display: block; font-size: 13px; overflow-wrap: anywhere; }
+.card span { display: block; font-size: 12px; color: var(--muted); }
+.card.done { opacity: .55; }
+.card.active { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent); opacity: 1; }
+.card.fail .n::after { content: ""; }
+
+.detail { position: sticky; top: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; }
+.detail .tag { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #fff; padding: 2px 8px; border-radius: 3px; }
+.detail h2 { font-size: 20px; margin: 8px 0 4px; }
+.detail .path { font: 12px var(--mono); color: var(--accent); overflow-wrap: anywhere; margin-bottom: 8px; }
+.detail ul { margin: 8px 0 0; padding-left: 18px; }
+.detail li + li { margin-top: 4px; }
+.ctrl { display: flex; gap: 8px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+button.b { font: inherit; padding: 6px 14px; border-radius: 4px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+button.b:hover:not(:disabled) { border-color: var(--accent); }
+button.b:disabled { opacity: .4; cursor: default; }
+button.b.p { background: var(--accent); color: #fff; border-color: var(--accent); }
+.prog { margin-left: auto; font: 12px var(--mono); color: var(--muted); }
+
+h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .09em; color: var(--accent); margin: 28px 0 10px; }
+.tblw { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+.s200 { color: var(--ok); font-weight: 700; } .s4 { color: var(--bad); font-weight: 700; }
+.note { color: var(--muted); font-size: 12.5px; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Login flow: every backend file, in order</h1>
+  <p class="sub"><code>POST /api/v1/auth/login</code> from the gateway to MySQL and Redis and back. Click a card, or use the arrow keys, to step through the flow. Paths are inside <code>stackshop-backend/</code>.</p>
+
+  <div class="main">
+    <div class="lanes" id="lanes"></div>
+    <aside class="detail" id="detail" aria-live="polite"></aside>
+  </div>
+
+  <h3>Possible results of LoginHandler</h3>
+  <div class="tblw"><table>
+    <thead><tr><th>Check (in order)</th><th>Result</th><th>HTTP</th><th>Side effects</th></tr></thead>
+    <tbody>
+      <tr><td>IP is blocked by the throttle</td><td><code>TooManyAttempts</code></td><td class="s4">429 + Retry-After</td><td>Metric outcome <code>throttled</code></td></tr>
+      <tr><td>Email unknown or user deleted, and the email is locked</td><td><code>LockedOut</code></td><td class="s4">423</td><td>None</td></tr>
+      <tr><td>Email unknown or user deleted</td><td><code>InvalidCredentials</code></td><td class="s4">401</td><td>Dummy hash check, failure counted for the email and the IP, so timing and lockout look like a real account (BR-07)</td></tr>
+      <tr><td>Account is locked</td><td><code>LockedOut</code></td><td class="s4">423</td><td>Even the right password answers "locked" until the lock ends (AC-3)</td></tr>
+      <tr><td>Wrong password</td><td><code>InvalidCredentials</code></td><td class="s4">401</td><td>Failed counter +1 (lock after the maximum), saved to MySQL, IP failure counted in Redis</td></tr>
+      <tr><td>Password correct</td><td><code>LoginResponse</code></td><td class="s200">200</td><td>Counter reset, new refresh token row, password rehashed if the hash is old, access token signed</td></tr>
+      <tr><td>Request body invalid (before the handler)</td><td><code>ValidationException</code></td><td class="s4">400</td><td>Handled by <code>GlobalExceptionHandler</code>, with an <code>errors</code> dictionary</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Login publishes no outbox event. Only registration does (<code>UserRegisteredV1</code>). Repository and adapter internals (for example the Redis key names) are not described here, because this page was built from the handler, endpoint and wiring code.</p>
+</div>
+
+<script>
+var LAYERS = {
+  gw:   { name: "Gateway",        color: "var(--l-gw)" },
+  api:  { name: "Identity.Api",   color: "var(--l-api)" },
+  app:  { name: "Application",    color: "var(--l-app)" },
+  dom:  { name: "Domain",         color: "var(--l-dom)" },
+  inf:  { name: "Infrastructure", color: "var(--l-inf)" },
+  data: { name: "Data stores",    color: "var(--l-data)" }
+};
+var S = "services/identity/src/";
+var STEPS = [
+  { l: "gw", t: "Gateway route", file: "gateway/src/Gateway.Api/appsettings.json", sub: "route identity-auth",
+    d: ["The browser (through the Next.js BFF) calls <code>POST /api/v1/auth/login</code>.",
+        "Route <code>identity-auth</code> matches <code>/api/v1/auth/{**catch-all}</code> and uses the <code>anonymous</code> policy, so no token is needed.",
+        "The gateway forwards the request to the identity cluster."], p: "services/gateway/src/Gateway.Api/appsettings.json" },
+  { l: "api", t: "Pipeline and wiring", file: "Identity.Api/Program.cs", sub: "middleware, DI, endpoints",
+    d: ["<code>UseForwardedHeaders</code> trusts <code>X-Forwarded-For</code> from the gateway, so the throttle sees the real client IP.",
+        "<code>AddJwtValidation</code>, <code>AddIdentityInfrastructure</code> and <code>AddIdentityApplication</code> register everything the flow needs.",
+        "<code>UseExceptionHandler</code> installs <code>GlobalExceptionHandler</code>; <code>MapIdentityEndpoints()</code> adds the routes."], p: S + "Identity.Api/Program.cs" },
+  { l: "api", t: "Login endpoint", file: "Identity.Api/Endpoints/AuthEndpoints.cs", sub: "POST /login (line 37)",
+    d: ["Binds the body to <code>LoginRequest(Email, Password)</code>.",
+        "Builds <code>new LoginCommand(email, password, ctx.Client())</code> and sends it with <code>ISender.Send</code> (MediatR).",
+        "Passes the result to <code>Problems.OkOr</code>. It declares 200, 401, 423 and 429 for OpenAPI."], p: S + "Identity.Api/Endpoints/AuthEndpoints.cs" },
+  { l: "api", t: "Client info helper", file: "Identity.Api/Http.cs", sub: "ctx.Client()",
+    d: ["<code>ctx.Client()</code> reads the remote IP and the <code>User-Agent</code> header into a <code>ClientInfo</code>.",
+        "Both values go into the command, for the IP throttle and for the refresh token record."], p: S + "Identity.Api/Http.cs" },
+  { l: "app", t: "Validation behavior", file: "Identity.Application/Common.cs", sub: "ValidationBehavior + LoginValidator",
+    d: ["MediatR runs <code>ValidationBehavior</code> before the handler (registered in <code>AddIdentityApplication</code>).",
+        "<code>LoginValidator</code> requires an email (max 256) and a password (max 128).",
+        "Any failure throws <code>ValidationException</code>. The handler never runs and the API returns 400."], p: S + "Identity.Application/Common.cs" },
+  { l: "app", t: "LoginHandler", file: "Identity.Application/Auth/RegisterAndLogin.cs", sub: "the use case (line 78)",
+    d: ["The center of the flow. It only talks to interfaces from <code>Ports.cs</code>.",
+        "Order: IP throttle, load user, locked check, verify password, update user, issue tokens, save, return.",
+        "Every outcome calls <code>IdentityMetrics.Login(...)</code> with a label such as <code>success</code> or <code>invalid_credentials</code>."], p: S + "Identity.Application/Auth/RegisterAndLogin.cs" },
+  { l: "inf", t: "IP and email throttle", file: "Identity.Infrastructure/Security/Adapters.cs", sub: "RedisLoginThrottle",
+    d: ["<code>IsIpBlockedAsync</code> is the first check. A blocked IP gets 429 before any database work.",
+        "For unknown emails, <code>IsUnknownEmailLockedAsync</code> and <code>RecordUnknownEmailFailureAsync</code> mimic real lockout (BR-07).",
+        "Counters live in Redis. The port is <code>ILoginThrottle</code> in <code>Ports.cs</code>."], p: S + "Identity.Infrastructure/Security/Adapters.cs" },
+  { l: "inf", t: "Load the user", file: "Identity.Infrastructure/Persistence/Repositories.cs", sub: "UserRepository",
+    d: ["<code>GetByNormalizedEmailAsync</code> finds the user by the normalized (trimmed, upper-case) email.",
+        "EF Core with Pomelo reads from the <code>identity</code> MySQL schema through <code>IdentityDb</code>."], p: S + "Identity.Infrastructure/Persistence/Repositories.cs" },
+  { l: "dom", t: "Lock rules", file: "Identity.Domain/User.cs", sub: "NormalizeEmail, IsLockedOut",
+    d: ["<code>User.NormalizeEmail</code> makes the lookup key.",
+        "<code>IsLockedOut(now)</code> is true if the status is locked or <code>LockoutEnd</code> is in the future.",
+        "A locked account answers 423 even for the right password."], p: S + "Identity.Domain/User.cs" },
+  { l: "inf", t: "Verify the password", file: "Identity.Infrastructure/Security/Adapters.cs", sub: "AspNetPasswordHasher",
+    d: ["<code>Verify</code> returns <code>Failed</code>, <code>Success</code> or <code>SuccessRehashNeeded</code>.",
+        "<code>BurnVerification</code> is a dummy check used for unknown emails, so response time looks the same."], p: S + "Identity.Infrastructure/Security/Adapters.cs" },
+  { l: "dom", t: "Failure path", file: "Identity.Domain/User.cs", sub: "RegisterFailedLogin", fail: true,
+    d: ["Wrong password: <code>user.RegisterFailedLogin(now, max, lockout)</code> raises the counter and may lock the account.",
+        "The handler saves it (a concurrent update is ignored), counts the IP failure in Redis, and returns 401.",
+        "The flow ends here for failures. The steps below are the success path."], p: S + "Identity.Domain/User.cs" },
+  { l: "dom", t: "Success and refresh token", file: "Identity.Domain/User.cs + RefreshToken.cs", sub: "RegisterSuccessfulLogin, Issue",
+    d: ["<code>RegisterSuccessfulLogin</code> resets the failed counter.",
+        "<code>SecureToken.Generate()</code> (in <code>Common.cs</code>) makes the random refresh token. Only its SHA-256 hash is stored.",
+        "<code>RefreshToken.Issue(userId, hash, now, ip, userAgent)</code> creates the row and starts a new token family."], p: S + "Identity.Domain/RefreshToken.cs" },
+  { l: "inf", t: "Sign the access token", file: "Identity.Infrastructure/Security/Adapters.cs", sub: "JwtAccessTokenService",
+    d: ["Creates the RS256 JWT with the user's id, roles and permissions. The key comes from <code>SigningKeyStore</code>.",
+        "Returns the token and its expiry. The handler turns that into <code>ExpiresIn</code> seconds (15 minutes)."], p: S + "Identity.Infrastructure/Security/Adapters.cs" },
+  { l: "data", t: "Save in one transaction", file: "Identity.Infrastructure/Persistence/IdentityDb.cs", sub: "IUnitOfWork.SaveChangesAsync → MySQL",
+    d: ["<code>IdentityDb</code> is the unit of work. One <code>SaveChangesAsync</code> writes the user update and the new <code>refresh_tokens</code> row together.",
+        "Tables come from the migration <code>20261124082906_InitialCreate</code>."], p: S + "Identity.Infrastructure/Persistence/IdentityDb.cs" },
+  { l: "api", t: "Build the response", file: "Identity.Api/Http.cs", sub: "Problems.OkOr → 200",
+    d: ["Success: <code>Results.Ok(LoginResponse)</code> with <code>accessToken</code>, <code>refreshToken</code>, <code>expiresIn</code> and the user summary.",
+        "Failure: <code>Problems.From</code> maps the error type to 401, 423 or 429 as RFC 7807 ProblemDetails with a <code>code</code> and a <code>traceId</code>.",
+        "The gateway passes the response back. The Next.js BFF stores the tokens in httpOnly cookies <code>at</code> and <code>rt</code>."], p: S + "Identity.Api/Http.cs" }
+];
+
+var cur = 0;
+var lanesEl = document.getElementById("lanes");
+var detailEl = document.getElementById("detail");
+
+function build() {
+  Object.keys(LAYERS).forEach(function (k) {
+    var lane = document.createElement("div");
+    lane.className = "lane";
+    var name = document.createElement("div");
+    name.className = "name";
+    name.style.background = LAYERS[k].color;
+    name.textContent = LAYERS[k].name;
+    var cards = document.createElement("div");
+    cards.className = "cards";
+    cards.id = "lane-" + k;
+    lane.appendChild(name);
+    lane.appendChild(cards);
+    lanesEl.appendChild(lane);
+  });
+  STEPS.forEach(function (s, i) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "card";
+    b.id = "card-" + i;
+    var n = document.createElement("span");
+    n.className = "n";
+    n.style.background = LAYERS[s.l].color;
+    n.textContent = i + 1;
+    var t = document.createElement("b");
+    t.textContent = s.t;
+    var f = document.createElement("span");
+    f.textContent = s.sub;
+    b.appendChild(n); b.appendChild(t); b.appendChild(f);
+    b.addEventListener("click", function () { go(i); });
+    document.getElementById("lane-" + s.l).appendChild(b);
+  });
+}
+
+function go(i) {
+  cur = Math.max(0, Math.min(STEPS.length - 1, i));
+  STEPS.forEach(function (s, j) {
+    var c = document.getElementById("card-" + j);
+    c.classList.toggle("active", j === cur);
+    c.classList.toggle("done", j < cur);
+  });
+  var s = STEPS[cur];
+  var items = s.d.map(function (x) { return "<li>" + x + "</li>"; }).join("");
+  detailEl.innerHTML =
+    '<span class="tag" style="background:' + LAYERS[s.l].color + '">' + LAYERS[s.l].name + '</span>' +
+    '<h2>' + (cur + 1) + '. ' + s.t + '</h2>' +
+    '<div class="path">' + s.p + '</div>' +
+    '<ul>' + items + '</ul>' +
+    '<div class="ctrl">' +
+      '<button class="b" id="prev"' + (cur === 0 ? " disabled" : "") + '>Back</button>' +
+      '<button class="b p" id="next"' + (cur === STEPS.length - 1 ? " disabled" : "") + '>Next</button>' +
+      '<span class="prog">' + (cur + 1) + ' / ' + STEPS.length + '</span>' +
+    '</div>';
+  document.getElementById("prev").onclick = function () { go(cur - 1); };
+  document.getElementById("next").onclick = function () { go(cur + 1); };
+  document.getElementById("card-" + cur).scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
+document.addEventListener("keydown", function (e) {
+  if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); go(cur + 1); }
+  if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); go(cur - 1); }
+});
+
+build();
+go(0);
+</script>
+</body>
+</html>
