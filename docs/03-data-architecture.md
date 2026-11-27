@@ -193,9 +193,9 @@ Migrations use **EF Core migrations** per service. They are applied by a K8s `Jo
 }
 ```
 
-Indexes: `{slug:1}` unique, `{"variants.sku":1}` unique, `{categoryIds:1, status:1}`, `{"brand.id":1}`.
+Indexes (created idempotently at catalog startup): `ux_products_slug` `{slug:1}` unique; `ux_products_variants_sku` `{"variants.sku":1}` unique and **partial** (`variants.sku` of type string; an empty `variants` array would otherwise collide across products); `{categoryIds:1, status:1}`; `{"brand.id":1}`; `{"brand.slug":1, status:1}`; `{status:1, publishedAt:-1}`; `{status:1, minPrice:1}`; `{status:1, updatedAt:-1}`. `_id` is a GUID v7 stored as a string, money is Decimal128, `minPrice` is the lowest active variant price (stored for sorting), and every document has `schemaVersion` (currently 1).
 
-Other collections: `categories` (tree with `parentId`, `path`, `attributeSchema`: which attributes are allowed/filterable), `brands`, `outbox` (same shape as the MySQL outbox. Written in a MongoDB **transaction**, which needs a replica set, even a single-node one locally), `inbox`, `wishlists` (`{_id: userId, items:[{productId, sku, addedAt}]}`).
+Other collections: `categories` (`{_id, name, slug, parentId, path (slugs root..self), level, sort, isActive, attributeSchema, version, schemaVersion}`; indexes `ux_categories_slug` unique, `{parentId, sort}`, `{path}`), `brands` (`{_id, name, slug, logoUrl, isActive, version}`; unique slug), `outbox` (same shape as the MySQL outbox. Written in a MongoDB **transaction**, which needs a replica set, even a single-node one locally), `inbox`, `wishlists` (`{_id: userId, items:[{productId, sku, addedAt}]}`).
 
 ### 3.2 review.reviews
 
