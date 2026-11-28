@@ -73,6 +73,10 @@ app/
 proxy.ts                                # protect /account & /checkout, redirect to /api/auth/refresh, guest cart cookie
 ```
 
+**Shared auth package:** `packages/auth` (`@stackshop/auth`, TypeScript source, no build step) holds the session core used by both apps: cookie options, JWT decode, the proxy decision (`protectPrefixes` for the storefront, `protectAllExcept` for admin), the refresh single-flight and the shared refresh and logout route handlers. Imports: `.` is client-safe, `./server` is server-only.
+
+**Env vars:** `API_BASE_URL` (server-only, both apps), `SITE_URL` (storefront canonical and JSON-LD URLs, default `http://localhost:3000`), `IMAGE_HOSTS` (optional extra `next/image` hosts).
+
 ## 4. Admin route map (`apps/admin/app`)
 
 ```

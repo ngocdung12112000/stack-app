@@ -55,13 +55,15 @@ gantt
 
 **New tech:** EF Core + MySQL, MongoDB, Redis cache, JWT, Next.js RSC/Server Actions.
 
-- [ ] **F01** Identity & Auth (register, login, refresh, logout, confirm email *stubbed*, roles)
-- [ ] **F02** Profile & Address book
-- [ ] **F03** Catalog: categories, brands, products, variants. Admin CRUD API. Redis cache-aside
-- [ ] Storefront: home, category page (Mongo query for now), PDP, login/register, account pages
-- [ ] Admin app: login, product list/create/edit (no images yet)
+- [x] **F01** Identity & Auth (register, login, refresh, logout, confirm email *stubbed*, roles)
+- [x] **F02** Profile & Address book
+- [x] **F03** Catalog: categories, brands, products, variants. Admin CRUD API. Redis cache-aside
+- [x] Storefront: home, category page (Mongo query for now), PDP, login/register, account pages
+- [x] Admin app: login, product list/create/edit (no images yet)
 
 **Demo:** an admin creates a product. A customer registers, logs in and browses it.
+
+**Status: done (2026-11-28).** Demo verified locally: an admin created and published a product in `apps/admin`, and it showed on the storefront category page and PDP. Known gaps carried forward: no `/revalidate` webhook yet (storefront cache is 60 s, so AC-4 is open until Phase 2 events), no stock badge (F05), Support role has no read-only catalog access (`catalog:read` not seeded), category tree drag-reorder editor not built.
 
 ## Phase 2 — Cart, Search, Inventory (≈4 weeks)
 

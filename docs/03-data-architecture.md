@@ -24,6 +24,7 @@ users (
   password_hash VARCHAR(512) NOT NULL,
   full_name VARCHAR(200),
   phone VARCHAR(30),
+  avatar_asset_id CHAR(36) NULL,  -- media asset reference (F02)
   email_confirmed BOOLEAN DEFAULT 0,
   status ENUM('Active','Locked','Deleted') DEFAULT 'Active',
   failed_login_count INT DEFAULT 0,
@@ -41,7 +42,8 @@ refresh_tokens (
 email_tokens (id, user_id, purpose ENUM('Confirm','Reset'), token_hash CHAR(64), created_at, expires_at, used_at)
 addresses (
   id PK, user_id FK INDEX, recipient_name, phone, line1, line2, ward, district, city,
-  country_code CHAR(2), postal_code, is_default BOOLEAN, created_at, updated_at
+  country_code CHAR(2), postal_code VARCHAR(20), is_default BOOLEAN, created_at, updated_at
+  -- one default per user is enforced in the domain (AddressBook) under a row lock on users, not by an index (F02)
 )
 outbox_messages (see §2.7)
 ```

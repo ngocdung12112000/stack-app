@@ -6,6 +6,12 @@
       "runtimeExecutable": "cmd",
       "runtimeArgs": ["/c", "pnpm", "--dir", "stackshop-frontend/apps/web", "dev"],
       "port": 3000
+    },
+    {
+      "name": "admin",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "pnpm", "--dir", "stackshop-frontend/apps/admin", "dev"],
+      "port": 3001
     }
   ]
 }

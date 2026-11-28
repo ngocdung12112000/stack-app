@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stackshop-infra: file guide</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --ink:#1b1f24; --muted:#5b6571; --line:#e3e6ea;
+    --local:#2563eb; --monitor:#d97706; --k8s:#059669; --ci:#7c3aed; --misc:#64748b;
+    --code:#eef1f5;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f1318; --card:#171c23; --ink:#e8ecf1; --muted:#9aa5b1; --line:#262d36; --code:#222a34;
+      --local:#60a5fa; --monitor:#fbbf24; --k8s:#34d399; --ci:#a78bfa; --misc:#94a3b8; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:32px 16px 64px}
+  h1{font-size:26px;margin:0 0 6px}
+  .sub{color:var(--muted);margin:0 0 24px}
+  h2{font-size:18px;margin:36px 0 4px;display:flex;align-items:center;gap:10px}
+  h2 .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+  .lead{color:var(--muted);margin:0 0 12px}
+  code{background:var(--code);padding:1px 6px;border-radius:5px;font:13px ui-monospace,Consolas,monospace}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0 8px}
+  .flow span.box{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px}
+  .flow span.arrow{color:var(--muted)}
+  .grid{display:grid;gap:10px}
+  .row{background:var(--card);border:1px solid var(--line);border-left-width:4px;border-radius:10px;padding:10px 14px;
+       display:grid;grid-template-columns:minmax(0,300px) 1fr;gap:6px 16px;align-items:start}
+  .row .f{font:13px ui-monospace,Consolas,monospace;word-break:break-all}
+  .row .d{margin:0}
+  .row .d small{display:block;color:var(--muted);margin-top:2px}
+  .local{border-left-color:var(--local)} .monitor{border-left-color:var(--monitor)}
+  .k8s{border-left-color:var(--k8s)} .ci{border-left-color:var(--ci)} .misc{border-left-color:var(--misc)}
+  .tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-left:6px;vertical-align:1px}
+  .note{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:28px}
+  .note b{display:block;margin-bottom:4px}
+  @media (max-width:640px){ .row{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>stackshop-infra: what each file does</h1>
+  <p class="sub">Everything the app needs <em>around</em> the code: local databases, monitoring, Kubernetes and checks. No application code lives here.</p>
+
+  <div class="flow" aria-label="How the parts connect">
+    <span class="box">local/ runs the tools on your PC</span><span class="arrow">→</span>
+    <span class="box">monitoring/ watches the services</span><span class="arrow">→</span>
+    <span class="box">k8s/ describes the real deployment</span><span class="arrow">→</span>
+    <span class="box">argocd/ applies it to the cluster</span><span class="arrow">→</span>
+    <span class="box">.github/ checks it all in CI</span>
+  </div>
+
+  <h2><span class="dot" style="background:var(--local)"></span>local/ &mdash; run everything on your computer</h2>
+  <p class="lead">Used by <code>docker compose -f local/compose.yml up -d</code>.</p>
+  <div class="grid">
+    <div class="row local"><div class="f">local/compose.yml</div>
+      <p class="d">Starts MySQL, MongoDB, Redis, Mailpit, Prometheus and Grafana and creates the Docker network <code>stackshop</code> that the backend also joins.</p></div>
+    <div class="row local"><div class="f">local/init/mysql/01-schemas.sql</div>
+      <p class="d">Runs on first MySQL start: creates the <code>identity</code> database and a user limited to it.<small>Dev passwords only.</small></p></div>
+    <div class="row local"><div class="f">local/init/mongo/rs-init.js</div>
+      <p class="d">Turns Mongo into a one-node replica set (<code>rs0</code>) so it supports transactions. Runs as the container health check and is safe to repeat.</p></div>
+    <div class="row local"><div class="f">local/init/mongo/.gitkeep</div>
+      <p class="d">Empty marker so Git keeps the folder.</p></div>
+    <div class="row local"><div class="f">local/grafana/provisioning/datasources/prometheus.yml</div>
+      <p class="d">Tells Grafana at startup: &ldquo;your data source is the Prometheus at <code>prometheus:9090</code>&rdquo;. No manual setup.</p></div>
+    <div class="row local"><div class="f">local/grafana/provisioning/dashboards/stackshop.yml</div>
+      <p class="d">Tells Grafana to load every dashboard JSON from <code>monitoring/dashboards</code> into a folder called StackShop.</p></div>
+  </div>
+
+  <h2><span class="dot" style="background:var(--monitor)"></span>monitoring/ &mdash; see problems before users do</h2>
+  <p class="lead">Dashboards, alert rules, how to react, and tests for the alerts.</p>
+  <div class="grid">
+    <div class="row monitor"><div class="f">monitoring/prometheus/prometheus.yml</div>
+      <p class="d">Local Prometheus config: scrape <code>gateway</code>, <code>catalog</code>, <code>identity</code> every 15s and load the alert rule files.</p></div>
+    <div class="row monitor"><div class="f">monitoring/rules/identity.rules.yaml</div>
+      <p class="d"><b>Source of truth</b> for the 6 identity alerts (token reuse, lockout, throttle, down, high 5xx, slow p95). Written as a Kubernetes <code>PrometheusRule</code>.</p></div>
+    <div class="row monitor"><div class="f">monitoring/prometheus/rules/identity.rules.yml</div>
+      <p class="d">Generated copy of the file above in the plain format local Prometheus reads. <span class="tag">generated</span><small>Do not edit by hand.</small></p></div>
+    <div class="row monitor"><div class="f">monitoring/scripts/render-local-rules.py</div>
+      <p class="d">Produces the generated copy. CI runs it with <code>--check</code> to make sure the two files never drift apart.</p></div>
+    <div class="row monitor"><div class="f">monitoring/rules/tests/identity.test.yaml</div>
+      <p class="d">Unit tests for the alerts: feeds fake numbers and checks each alert fires (or stays quiet) at the right time.</p></div>
+    <div class="row monitor"><div class="f">monitoring/dashboards/identity-auth.json</div>
+      <p class="d">The Grafana dashboard &ldquo;Identity &amp; Auth&rdquo;: logins, refresh tokens, request rate, errors, latency, memory.</p></div>
+    <div class="row monitor"><div class="f">monitoring/kustomization.yaml</div>
+      <p class="d">Packs the rules and the dashboard so Kubernetes (via ArgoCD) can deploy them to the <code>monitoring</code> namespace.</p></div>
+    <div class="row monitor"><div class="f">monitoring/runbooks/identity-login-abuse.md</div>
+      <p class="d">What to do when lockout/throttle alerts fire or identity is down.</p></div>
+    <div class="row monitor"><div class="f">monitoring/runbooks/identity-refresh-reuse.md</div>
+      <p class="d">What to do when a refresh token is reused (possible stolen token).</p></div>
+    <div class="row monitor"><div class="f">monitoring/runbooks/identity-service-health.md</div>
+      <p class="d">What to do for high 5xx or slow responses: check MySQL, Redis, memory, thread pool.</p></div>
+  </div>
+
+  <h2><span class="dot" style="background:var(--k8s)"></span>k8s/apps/identity/ &mdash; how identity runs on Kubernetes</h2>
+  <p class="lead">Kustomize: <code>base/</code> is shared, each <code>overlays/</code> folder changes it for one environment.</p>
+  <div class="grid">
+    <div class="row k8s"><div class="f">README.md</div>
+      <p class="d">Explains the keys the <code>identity-secrets</code> Secret must contain and how it is created per environment.</p></div>
+    <div class="row k8s"><div class="f">base/kustomization.yaml</div>
+      <p class="d">Lists the files below as one package and holds the image name.</p></div>
+    <div class="row k8s"><div class="f">base/deployment.yaml</div>
+      <p class="d">Runs 2 identity pods: health probes, non-root, read-only filesystem, JWT signing key mounted from the Secret.</p></div>
+    <div class="row k8s"><div class="f">base/service.yaml</div>
+      <p class="d">Stable address <code>identity:8080</code> so the gateway can find the pods.</p></div>
+    <div class="row k8s"><div class="f">base/configmap.yaml</div>
+      <p class="d">Non-secret settings: token lifetime, lockout limits, email host.</p></div>
+    <div class="row k8s"><div class="f">base/migration-job.yaml</div>
+      <p class="d">Runs the database migration once before each deploy (ArgoCD PreSync), so pods never migrate themselves.</p></div>
+    <div class="row k8s"><div class="f">base/hpa.yaml</div>
+      <p class="d">Auto-scales from 2 to 5 pods when CPU passes 70%.</p></div>
+    <div class="row k8s"><div class="f">base/pdb.yaml</div>
+      <p class="d">During node maintenance, always keep at least 1 pod alive.</p></div>
+    <div class="row k8s"><div class="f">base/networkpolicy.yaml</div>
+      <p class="d">Only the gateway and Prometheus may call identity. Outbound only to DNS, MySQL, Redis and SMTP.</p></div>
+    <div class="row k8s"><div class="f">base/servicemonitor.yaml</div>
+      <p class="d">Tells Prometheus to scrape identity&rsquo;s <code>/metrics</code>.</p></div>
+    <div class="row k8s"><div class="f">base/serviceaccount.yaml</div>
+      <p class="d">The pod&rsquo;s identity inside the cluster (no API token mounted).</p></div>
+    <div class="row k8s"><div class="f">overlays/dev/kustomization.yaml</div>
+      <p class="d">Dev: 1 replica, no autoscaler or PDB, smaller resources, dev frontend URL.</p></div>
+    <div class="row k8s"><div class="f">overlays/staging/kustomization.yaml<br>overlays/staging/sealedsecret.yaml</div>
+      <p class="d">Staging settings and an <b>empty</b> SealedSecret placeholder (must be sealed against the real cluster).</p></div>
+    <div class="row k8s"><div class="f">overlays/prod/kustomization.yaml<br>overlays/prod/externalsecret.yaml</div>
+      <p class="d">Prod: real URLs and SMTP, up to 6 pods. Secrets come from AWS Secrets Manager; the file holds key names only.</p></div>
+    <div class="row k8s"><div class="f">k8s/.gitkeep</div>
+      <p class="d">Empty marker so Git keeps the folder.</p></div>
+  </div>
+
+  <h2><span class="dot" style="background:var(--k8s)"></span>argocd/apps/ &mdash; GitOps</h2>
+  <p class="lead">Tells ArgoCD &ldquo;watch this Git path and keep the cluster identical to it&rdquo;.</p>
+  <div class="grid">
+    <div class="row k8s"><div class="f">identity-dev.yaml<br>identity-staging.yaml<br>identity-prod.yaml</div>
+      <p class="d">One ArgoCD Application per environment, each pointing at the matching <code>k8s/apps/identity/overlays/&lt;env&gt;</code> folder. <span class="tag">not running yet</span><small>No cluster or ArgoCD is installed locally.</small></p></div>
+  </div>
+
+  <h2><span class="dot" style="background:var(--ci)"></span>.github/ &mdash; automatic checks</h2>
+  <div class="grid">
+    <div class="row ci"><div class="f">.github/workflows/validate.yml</div>
+      <p class="d">On every push: validate Prometheus config and rules, run alert tests, check dashboards, build each Kustomize overlay and lint it (kubeconform, kube-linter).</p></div>
+  </div>
+
+  <h2><span class="dot" style="background:var(--misc)"></span>Repo root</h2>
+  <div class="grid">
+    <div class="row misc"><div class="f">CLAUDE.md</div>
+      <p class="d">Short guide for Claude Code: commands, ports, Mongo connection strings, monitoring workflow.</p></div>
+    <div class="row misc"><div class="f">.gitignore</div>
+      <p class="d">Keeps <code>.env</code> and OS junk out of Git.</p></div>
+  </div>
+
+  <div class="note">
+    <b>Good to know</b>
+    Only <em>identity</em> has manifests and monitoring so far. Gateway, catalog and later services get theirs as they are added. Nothing here has been applied to a real cluster yet; local Docker and CI validation are what is proven.
+  </div>
+</div>
+</body>
+</html>
